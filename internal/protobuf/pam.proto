@@ -1,0 +1,49 @@
+syntax = "proto3";
+
+option go_package = "/pamserver";
+
+
+message AuthData {
+    string username = 1;
+    string pwd = 2;
+}
+
+message AuthResponse {
+    string error = 1;
+    string token = 2;
+}
+
+message UploadData {
+   string name = 1;
+   int32 type = 2;
+   bytes data = 3;
+}
+
+message UploadResponse {
+    string error = 1;
+}
+
+message GetData {
+    string name = 1;
+}
+
+message GetDataResponse {
+    int32 kind = 2;
+    bytes data = 3;
+}
+
+message GetDataNames {
+    
+}
+
+message GetDataNamesResponse {
+    repeated string names = 1;
+}
+
+service PamServer {
+    rpc Register(AuthData) returns (AuthResponse);
+    rpc Authenticate(AuthData) returns (AuthResponse);
+    rpc Upload(UploadData) returns (UploadResponse);
+    rpc Get(GetData) returns (GetDataResponse);
+    rpc GetNames(GetDataNames) returns (GetDataNamesResponse);
+}
