@@ -2,9 +2,10 @@ package main
 
 import (
 	"context"
-	"flag"
+	"errors"
 	"fmt"
 	"net"
+	"time"
 
 	"github.com/jackc/pgx/v5/pgxpool"
 	"github.com/smakimka/pam/internal/server/config"
@@ -15,17 +16,17 @@ import (
 func main() {
 	ctx := context.Background()
 
-	var configPath string
-	flag.StringVar(&configPath, "c", "config.json", "path to config file")
-	flag.Parse()
-
-	cfg, err := config.New(configPath)
+	cfg, err := config.New()
 	if err != nil {
 		panic(err)
 	}
 
 	pool, err := pgxpool.New(ctx, cfg.DBUrl)
 	if err != nil {
+		panic(err)
+	}
+
+	if err = waitForPostgres(ctx, pool); err != nil {
 		panic(err)
 	}
 
@@ -43,10 +44,35 @@ func main() {
 		panic(err)
 	}
 
-	server := service.NewServer(s)
+	server := service.NewServer(s, cfg.AuthTokenExpiryTimeSec)
 
 	fmt.Printf("started server on %s\n", cfg.Addr)
 	if err := server.Serve(listen); err != nil {
 		panic(err)
+	}
+}
+
+func waitForPostgres(ctx context.Context, p *pgxpool.Pool) error {
+	timeoutTimer := time.NewTimer(10 * time.Second)
+
+	okChan := make(chan struct{})
+	go func() {
+		for {
+			err := p.Ping(ctx)
+			if err != nil {
+				time.Sleep(1 * time.Second)
+				continue
+			}
+
+			okChan <- struct{}{}
+			break
+		}
+	}()
+
+	select {
+	case <-timeoutTimer.C:
+		return errors.New("Couldn't reach postgres'")
+	case <-okChan:
+		return nil
 	}
 }

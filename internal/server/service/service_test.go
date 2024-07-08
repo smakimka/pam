@@ -87,7 +87,7 @@ func (s *ServiceTestSuite) TestRegister() {
 		},
 	}
 	ctx := context.Background()
-	service := NewPamSerice(s.storage)
+	service := newPamSerice(s.storage, 300)
 
 	for _, test := range tests {
 		out, err := service.Register(ctx, &test.in)
@@ -128,7 +128,7 @@ func (s *ServiceTestSuite) TestAuthenticate() {
 		},
 	}
 	ctx := context.Background()
-	service := NewPamSerice(s.storage)
+	service := newPamSerice(s.storage, 300)
 
 	pwd, err := bcrypt.GenerateFromPassword([]byte("pwd"), bcrypt.DefaultCost)
 	if err != nil {
@@ -198,7 +198,7 @@ func (s *ServiceTestSuite) TestUpload() {
 		},
 	}
 	ctx := context.Background()
-	service := NewPamSerice(s.storage)
+	service := newPamSerice(s.storage, 300)
 
 	userID, err := s.storage.CreateUser(ctx, "test_user", []byte("123"))
 	if err != nil {
@@ -257,7 +257,7 @@ func (s *ServiceTestSuite) GetData() {
 		},
 	}
 	ctx := context.Background()
-	service := NewPamSerice(s.storage)
+	service := newPamSerice(s.storage, 300)
 
 	userID, err := s.storage.CreateUser(ctx, "test_user", []byte("123"))
 	if err != nil {
@@ -278,7 +278,7 @@ func (s *ServiceTestSuite) GetData() {
 	}
 
 	for _, test := range tests {
-		out, err := service.GetData(ctx, &test.in)
+		out, err := service.Get(ctx, &test.in)
 		if test.wantErr {
 			s.Error(err)
 			continue
@@ -307,7 +307,7 @@ func (s *ServiceTestSuite) GetDataNames() {
 		},
 	}
 	ctx := context.Background()
-	service := NewPamSerice(s.storage)
+	service := newPamSerice(s.storage, 300)
 
 	userID, err := s.storage.CreateUser(ctx, "test_user", []byte("123"))
 	if err != nil {
@@ -328,7 +328,7 @@ func (s *ServiceTestSuite) GetDataNames() {
 	}
 
 	for _, test := range tests {
-		out, err := service.GetDataNames(ctx, &test.in)
+		out, err := service.GetNames(ctx, &test.in)
 		if test.wantErr {
 			s.Error(err)
 			continue
