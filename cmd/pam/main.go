@@ -4,12 +4,12 @@ import (
 	"context"
 
 	"github.com/alecthomas/kong"
+	"github.com/smakimka/pam/internal/client/certs"
 	"github.com/smakimka/pam/internal/client/cli"
 	"github.com/smakimka/pam/internal/client/pamclient"
 	"github.com/smakimka/pam/internal/client/state"
 	"github.com/smakimka/pam/internal/protobuf/pamserver"
 	"google.golang.org/grpc"
-	"google.golang.org/grpc/credentials/insecure"
 )
 
 func main() {
@@ -27,7 +27,12 @@ func main() {
 		}
 	}
 
-	conn, err := grpc.NewClient(state.ServerAddr, grpc.WithTransportCredentials(insecure.NewCredentials()))
+	tlsCredentials, err := certs.LoadTLSCredentials()
+	if err != nil {
+		panic(err)
+	}
+
+	conn, err := grpc.NewClient(state.ServerAddr, grpc.WithTransportCredentials(tlsCredentials))
 	if err != nil {
 		panic(err)
 	}

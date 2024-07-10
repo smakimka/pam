@@ -8,6 +8,7 @@ import (
 	"time"
 
 	"github.com/jackc/pgx/v5/pgxpool"
+	"github.com/smakimka/pam/internal/server/certs"
 	"github.com/smakimka/pam/internal/server/config"
 	"github.com/smakimka/pam/internal/server/service"
 	"github.com/smakimka/pam/internal/server/storage"
@@ -44,7 +45,11 @@ func main() {
 		panic(err)
 	}
 
-	server := service.NewServer(s, cfg.AuthTokenExpiryTimeSec)
+	tlsCredentials, err := certs.LoadTLSCredentials()
+	if err != nil {
+		panic(err)
+	}
+	server := service.NewServer(s, tlsCredentials, cfg.AuthTokenExpiryTimeSec)
 
 	fmt.Printf("started server on %s\n", cfg.Addr)
 	if err := server.Serve(listen); err != nil {
