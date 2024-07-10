@@ -24,6 +24,7 @@ func Open() (*State, error) {
 	cfg := &State{}
 
 	filePath, err := xdg.DataFile("pam/pam.data")
+	fmt.Println(filePath)
 	if err != nil {
 		return cfg, err
 	}

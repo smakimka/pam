@@ -76,10 +76,6 @@ func (s *PGStorage) Init(ctx context.Context) error {
 		return err
 	}
 
-	if err = s.ClearDBAfterTestDoNotUse(ctx); err != nil {
-		return err
-	}
-
 	return nil
 }
 
