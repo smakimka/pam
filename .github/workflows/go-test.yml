@@ -16,7 +16,7 @@ jobs:
     - name: Checkout code
       uses: actions/checkout@v2
 
-    -name: Create certs
+    - name: Create certs
       run: echo "cert" > internal/client/certs/ca-cert.pem
 
     - name: Set up Go
