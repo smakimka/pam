@@ -18,7 +18,6 @@ func LoadTLSCredentials() (credentials.TransportCredentials, error) {
 		return nil, fmt.Errorf("failed to add server CA's certificate")
 	}
 
-	// Create the credentials and return it
 	config := &tls.Config{
 		RootCAs: certPool,
 	}
