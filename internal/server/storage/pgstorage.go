@@ -8,6 +8,7 @@ import (
 	"github.com/jackc/pgx/v5"
 	"github.com/jackc/pgx/v5/pgxpool"
 	"github.com/rs/zerolog/log"
+
 	"github.com/smakimka/pam/internal/server/model"
 )
 
@@ -73,36 +74,6 @@ func (s *PGStorage) Init(ctx context.Context) error {
 
 	err = tx.Commit(ctx)
 	if err != nil {
-		return err
-	}
-
-	if err = s.ClearDBAfterTestDoNotUse(ctx); err != nil {
-		return err
-	}
-
-	return nil
-}
-
-func (s *PGStorage) ClearDBAfterTestDoNotUse(ctx context.Context) error {
-	tx, err := s.p.Begin(ctx)
-	if err != nil {
-		return err
-	}
-
-	_, err = tx.Exec(ctx, `delete from user_data`)
-	if err != nil {
-		return err
-	}
-	_, err = tx.Exec(ctx, `delete from auths`)
-	if err != nil {
-		return err
-	}
-	_, err = tx.Exec(ctx, `delete from users`)
-	if err != nil {
-		return err
-	}
-
-	if err = tx.Commit(ctx); err != nil {
 		return err
 	}
 

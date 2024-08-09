@@ -8,6 +8,7 @@ import (
 	"time"
 
 	"github.com/jackc/pgx/v5/pgxpool"
+
 	"github.com/smakimka/pam/internal/server/certs"
 	"github.com/smakimka/pam/internal/server/config"
 	"github.com/smakimka/pam/internal/server/service"

@@ -4,12 +4,13 @@ import (
 	"context"
 
 	"github.com/alecthomas/kong"
+	"google.golang.org/grpc"
+
 	"github.com/smakimka/pam/internal/client/certs"
 	"github.com/smakimka/pam/internal/client/cli"
 	"github.com/smakimka/pam/internal/client/pamclient"
 	"github.com/smakimka/pam/internal/client/state"
 	"github.com/smakimka/pam/internal/protobuf/pamserver"
-	"google.golang.org/grpc"
 )
 
 func main() {

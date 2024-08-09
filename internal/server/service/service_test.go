@@ -9,33 +9,35 @@ import (
 	"github.com/jackc/pgx/v5/pgxpool"
 	"github.com/ory/dockertest/v3"
 	"github.com/ory/dockertest/v3/docker"
+	"github.com/stretchr/testify/suite"
+	"golang.org/x/crypto/bcrypt"
+
 	"github.com/smakimka/pam/internal/datatypes"
 	"github.com/smakimka/pam/internal/protobuf/pamserver"
 	"github.com/smakimka/pam/internal/server/model"
 	"github.com/smakimka/pam/internal/server/storage"
-	"github.com/stretchr/testify/suite"
-	"golang.org/x/crypto/bcrypt"
 )
 
 type ServiceTestSuite struct {
 	suite.Suite
-	storage  *storage.PGStorage
-	pool     *dockertest.Pool
-	postgres *dockertest.Resource
+	storage    *storage.PGStorage
+	pgPool     *pgxpool.Pool
+	dockerPool *dockertest.Pool
+	postgres   *dockertest.Resource
 }
 
 func (s *ServiceTestSuite) SetupSuite() {
-	pool, err := dockertest.NewPool("")
+	dockerPool, err := dockertest.NewPool("")
 	if err != nil {
 		panic(err)
 	}
 
-	err = pool.Client.Ping()
+	err = dockerPool.Client.Ping()
 	if err != nil {
 		panic(err)
 	}
 
-	resource, err := pool.RunWithOptions(&dockertest.RunOptions{
+	resource, err := dockerPool.RunWithOptions(&dockertest.RunOptions{
 		Repository: "postgres",
 		Tag:        "16.3",
 		Env:        []string{"POSTGRES_PASSWORD=password"}},
@@ -48,7 +50,9 @@ func (s *ServiceTestSuite) SetupSuite() {
 		panic(err)
 	}
 	time.Sleep(time.Second * 5)
-	resource.Expire(60)
+	if err = resource.Expire(60); err != nil {
+		panic(err)
+	}
 
 	pgpool, err := pgxpool.New(context.Background(), fmt.Sprintf("postgres://postgres:password@localhost:%s/postgres", resource.GetPort("5432/tcp")))
 	if err != nil {
@@ -60,12 +64,16 @@ func (s *ServiceTestSuite) SetupSuite() {
 	}
 
 	storage, err := storage.NewPGStorage(pgpool)
+	if err != nil {
+		panic(err)
+	}
 	if err = storage.Init(context.Background()); err != nil {
 		panic(err)
 	}
 
 	s.storage = storage
-	s.pool = pool
+	s.pgPool = pgpool
+	s.dockerPool = dockerPool
 	s.postgres = resource
 }
 
@@ -341,14 +349,33 @@ func (s *ServiceTestSuite) GetDataNames() {
 
 func (s *ServiceTestSuite) AfterTest(suiteName, testName string) {
 	ctx := context.Background()
-	err := s.storage.ClearDBAfterTestDoNotUse(ctx)
+
+	tx, err := s.pgPool.Begin(ctx)
 	if err != nil {
 		panic(err)
 	}
+
+	_, err = tx.Exec(ctx, `delete from user_data`)
+	if err != nil {
+		panic(err)
+	}
+	_, err = tx.Exec(ctx, `delete from auths`)
+	if err != nil {
+		panic(err)
+	}
+	_, err = tx.Exec(ctx, `delete from users`)
+	if err != nil {
+		panic(err)
+	}
+
+	if err = tx.Commit(ctx); err != nil {
+		panic(err)
+	}
+
 }
 
 func (s *ServiceTestSuite) TearDownSuite() {
-	if err := s.pool.Purge(s.postgres); err != nil {
+	if err := s.dockerPool.Purge(s.postgres); err != nil {
 		panic(err)
 	}
 }
